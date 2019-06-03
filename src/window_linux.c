@@ -3,13 +3,15 @@
 #include <xcb/xcb.h>
 #include <string.h>
 
-int window_native_init(struct window *w,
-                       char *title,
-                       uint16_t width,
-                       uint16_t height) {
+int window_init(struct window *w,
+                char *title,
+                uint16_t width,
+                uint16_t height) {
   int i, screen_index;
   xcb_screen_iterator_t screen_iter;
 
+  if (!w) return -1;
+  memset(w, 0, sizeof(struct window));
   w->xcb.cn = xcb_connect(NULL, &screen_index);
   if (!w->xcb.cn) return -1;
   w->xcb.setup = (xcb_setup_t *) xcb_get_setup(w->xcb.cn);
@@ -42,7 +44,7 @@ int window_native_init(struct window *w,
   return 0;
 }
 
-int window_native_map(struct window *w) {
+int window_map(struct window *w) {
   xcb_map_window(w->xcb.cn, w->xcb.wn);
   xcb_flush(w->xcb.cn);
   return 0;

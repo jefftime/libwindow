@@ -28,7 +28,7 @@ elseif(LIBWINDOW_OS_WINDOWS)
 endif()
 
 # Library
-add_library(window "./src/window.c" ${PLATFORM_SOURCES})
+add_library(window ${PLATFORM_SOURCES})
 add_dependencies(window sized_types)
 target_link_libraries(window sized_types ${PLATFORM_LIBS})
 target_include_directories(window PUBLIC "./src")

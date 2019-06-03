@@ -16,10 +16,14 @@ struct window {
   uint16_t height;
 };
 
+/* **************************************** */
+/* window_<platform>.c */
 int window_init(struct window *w,
                 char *title,
                 uint16_t width,
                 uint16_t height);
+int window_map(struct window *w);
+/* **************************************** */
 
 
 #endif
