@@ -1,0 +1,23 @@
+Author: J. Jeffery Stager Jr.
+
+LIBWINDOW
+
+  This is a basic wrapper around native OS window APIs. It provids a simple API
+  for creating a window for graphics programming
+
+DEPENDENCIES
+
+  This library depends on the following libraries:
+
+    * https://github.com/jefftime/sized_types
+
+USAGE
+
+  To use this library, download the dependencies and add them to your
+  CMakeLists.txt with the following lines:
+
+    add_subdirectory("/path/to/sized_types")
+    add_subdirectory("/path/to/window")
+
+  After that, link `window` along with the rest of your project's libraries in
+  CMake
