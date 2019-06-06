@@ -3,23 +3,25 @@
 #include <xcb/xcb.h>
 #include <string.h>
 
-int window_init(struct window *w,
-                char *title,
-                uint16_t width,
-                uint16_t height) {
+static void setup_xcb(struct window *w) {
   int i, screen_index;
   xcb_screen_iterator_t screen_iter;
 
-  if (!w) return -1;
-  memset(w, 0, sizeof(struct window));
   w->xcb.cn = xcb_connect(NULL, &screen_index);
   if (!w->xcb.cn) return -1;
   w->xcb.setup = (xcb_setup_t *) xcb_get_setup(w->xcb.cn);
   screen_iter = xcb_setup_roots_iterator(w->xcb.setup);
+  /* Get selected screen index information */
   for (i = 0; i < screen_index; ++i) {
     xcb_screen_next(&screen_iter);
   }
   w->xcb.screen = screen_iter.data;
+}
+
+static void setup_window(struct window *w,
+                         char *title,
+                         uint16_t width,
+                         uint16_t height) {
   w->xcb.wn = xcb_generate_id(w->xcb.cn);
   xcb_create_window(w->xcb.cn,
                     w->xcb.screen->root_depth,
@@ -41,10 +43,24 @@ int window_init(struct window *w,
                       (uint32_t) strlen(title),
                       title);
   xcb_flush(w->xcb.cn);
+}
+
+/* **************************************** */
+/* Public */
+/* **************************************** */
+
+int window_init(struct window *w,
+                char *title,
+                uint16_t width,
+                uint16_t height) {
+  if (!w) return -1;
+  memset(w, 0, sizeof(struct window));
+  setup_xcb(w);
+  setup_window(w, title, width, height);
   return 0;
 }
 
-int window_map(struct window *w) {
+int window_show(struct window *w) {
   xcb_map_window(w->xcb.cn, w->xcb.wn);
   xcb_flush(w->xcb.cn);
   return 0;
