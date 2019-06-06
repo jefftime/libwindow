@@ -1,0 +1,28 @@
+LIBWINDOW API DOCUMENTATION
+
+FUNCTIONS
+
+  window_init
+
+    * struct window *w  - Window to initialize
+    * char *title       - Window title message
+    * width             - Width of the window in pixels
+    * height            - Height of the window in pixels
+    * <return value>    - Error code or 0 on success
+
+  window_show
+
+    * struct window *w  - Window to show
+
+  window_update
+
+    * struct window *w - Window to update
+
+    WARNING: This update does not check if `w` is NULL. It is assumed that the
+    caller may wish to call this in a main loop, so the NULL check is left out
+    for performance reasons.
+
+  window_buffer
+
+    * struct window *w  - Window to get buffer pointer
+    * <return value>    - A pointer to the window's buffer
