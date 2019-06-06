@@ -3,7 +3,7 @@
 #include <xcb/xcb.h>
 #include <string.h>
 
-static void setup_xcb(struct window *w) {
+static int setup_xcb(struct window *w) {
   int i, screen_index;
   xcb_screen_iterator_t screen_iter;
 
@@ -16,6 +16,7 @@ static void setup_xcb(struct window *w) {
     xcb_screen_next(&screen_iter);
   }
   w->xcb.screen = screen_iter.data;
+  return 0;
 }
 
 static void setup_window(struct window *w,
@@ -55,7 +56,7 @@ int window_init(struct window *w,
                 uint16_t height) {
   if (!w) return -1;
   memset(w, 0, sizeof(struct window));
-  setup_xcb(w);
+  if (setup_xcb(w)) return -1;
   setup_window(w, title, width, height);
   return 0;
 }
