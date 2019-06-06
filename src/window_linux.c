@@ -61,8 +61,7 @@ int window_init(struct window *w,
   return 0;
 }
 
-int window_show(struct window *w) {
+void window_show(struct window *w) {
   xcb_map_window(w->xcb.cn, w->xcb.wn);
   xcb_flush(w->xcb.cn);
-  return 0;
 }
