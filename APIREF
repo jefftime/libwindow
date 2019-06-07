@@ -26,3 +26,8 @@ FUNCTIONS
 
     * struct window *w  - Window to get buffer pointer
     * <return value>    - A pointer to the window's buffer
+
+  window_close
+
+    * struct window *w  - Window to get close status of
+    * <return value> - A boolean indicating if the window has been closed
