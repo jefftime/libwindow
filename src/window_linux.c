@@ -15,6 +15,8 @@ struct xcb {
   xcb_gcontext_t gc;
   xcb_shm_seg_t shmseg;
   uint32_t *shm_data;
+  xcb_atom_t win_delete;
+  int should_close;
 };
 
 static int init_struct(struct window *w,
@@ -22,7 +24,7 @@ static int init_struct(struct window *w,
                        uint16_t width,
                        uint16_t height) {
   memset(w, 0, sizeof(struct window));
-  w->internal = malloc(sizeof(struct xcb));
+  w->internal = calloc(1, sizeof(struct xcb));
   if (!w->internal) return -1;
   w->width = width;
   w->height = height;
@@ -46,13 +48,17 @@ static int setup_xcb(struct xcb *xcb) {
   return 0;
 }
 
-static void setup_window(struct window *w) {
+static int setup_window(struct window *w) {
+  uint32_t mask = XCB_CW_EVENT_MASK;
+  uint32_t values[] = { XCB_EVENT_MASK_STRUCTURE_NOTIFY };
   struct xcb *xcb;
+  xcb_intern_atom_cookie_t protocol_cookie, delete_cookie;
+  xcb_intern_atom_reply_t *protocol_reply, *delete_reply;
 
   xcb = (struct xcb *) w->internal;
   xcb->wn = xcb_generate_id(xcb->cn);
   xcb_create_window(xcb->cn,
-                    xcb->screen->root_depth,
+                    XCB_COPY_FROM_PARENT,
                     xcb->wn,
                     xcb->screen->root,
                     0, 0,
@@ -60,8 +66,8 @@ static void setup_window(struct window *w) {
                     0,
                     XCB_WINDOW_CLASS_INPUT_OUTPUT,
                     xcb->screen->root_visual,
-                    0,
-                    NULL);
+                    mask,
+                    values);
   xcb_change_property(xcb->cn,
                       XCB_PROP_MODE_REPLACE,
                       xcb->wn,
@@ -71,6 +77,34 @@ static void setup_window(struct window *w) {
                       (uint32_t) strlen(w->title),
                       w->title);
   xcb_flush(xcb->cn);
+  /* Watch for delete event */
+  protocol_cookie = xcb_intern_atom(xcb->cn,
+                                    0,
+                                    strlen("WM_PROTOCOLS"),
+                                    "WM_PROTOCOLS");
+  protocol_reply = xcb_intern_atom_reply(xcb->cn, protocol_cookie, NULL);
+  if (!protocol_reply) return -1;
+  delete_cookie = xcb_intern_atom(xcb->cn,
+                                  0,
+                                  strlen("WM_DELETE_WINDOW"),
+                                  "WM_DELETE_WINDOW");
+  delete_reply = xcb_intern_atom_reply(xcb->cn, delete_cookie, NULL);
+  if (!delete_reply) {
+    free(protocol_reply);
+    return -1;
+  }
+  xcb_change_property(xcb->cn,
+                      XCB_PROP_MODE_REPLACE,
+                      xcb->wn,
+                      (protocol_reply->atom),
+                      XCB_ATOM_ATOM,
+                      32,
+                      1,
+                      &delete_reply->atom);
+  xcb->win_delete = delete_reply->atom;
+  free(protocol_reply);
+  free(delete_reply);
+  return 0;
 }
 
 static void setup_graphics_context(struct xcb *xcb) {
@@ -109,7 +143,7 @@ int window_init(struct window *w,
   if (init_struct(w, title, width, height)) return -1;
   xcb = (struct xcb *) w->internal;
   if (setup_xcb((struct xcb *) w->internal)) return -1;
-  setup_window(w);
+  if (setup_window(w)) return -1;
   setup_graphics_context((struct xcb *) w->internal);
   if (setup_shm_pixmap(w)) return -1;
   xcb_flush(xcb->cn);
@@ -127,8 +161,21 @@ void window_show(struct window *w) {
 
 void window_update(struct window *w) {
   struct xcb *xcb;
+  xcb_generic_event_t *event;
 
   xcb = (struct xcb *) w->internal;
+  /* Check if window has been closed */
+  while ((event = xcb_poll_for_event(xcb->cn))) {
+    switch (event->response_type & ~0x80) {
+      case XCB_CLIENT_MESSAGE: {
+        xcb_client_message_event_t *e;
+
+        e = (xcb_client_message_event_t *) event;
+        if (e->data.data32[0] == xcb->win_delete) xcb->should_close = 1;
+        break;
+      }
+    }
+  }
   xcb_shm_put_image(xcb->cn,
                     xcb->wn,
                     xcb->gc,
@@ -149,5 +196,5 @@ uint32_t *window_buffer(struct window *w) {
 }
 
 int window_close(struct window *w) {
-  return 0;
+  return ((struct xcb *) w->internal)->should_close;
 }
