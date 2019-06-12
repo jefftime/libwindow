@@ -135,7 +135,10 @@ static int setup_shm(struct window *w) {
   struct xcb *xcb;
 
   xcb = (struct xcb *) w->internal;
-  if (xcb->shm_data) xcb_shm_detach(xcb->cn, xcb->shmseg);
+  if (xcb->shm_data) {
+    xcb_shm_detach(xcb->cn, xcb->shmseg);
+    shmdt((void *) xcb->shm_data);
+  }
   shmid = shmget(IPC_PRIVATE,
                  sizeof(uint32_t) * w->width * w->height,
                  IPC_CREAT | 0777);
