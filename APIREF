@@ -10,6 +10,14 @@ FUNCTIONS
     * height            - Height of the window in pixels
     * <return value>    - Error code or 0 on success
 
+    Initializes a window
+
+  window_deinit
+
+    * struct window *w  - Window to deinitialize
+
+    Cleanup function for window initialized by `window_init`
+
   window_show
 
     * struct window *w  - Window to show
