@@ -17,13 +17,7 @@
  */
 
 #include "window.h"
-
-#define int8_t xcb_int8_t
-#define uint8_t xcb_uint8_t
 #include <xcb/xcb.h>
-#undef int8_t
-#undef uint8_t
-
 #include <sized_types.h>
 #include <xcb/shm.h>
 #include <sys/ipc.h>
