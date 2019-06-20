@@ -17,8 +17,14 @@
  */
 
 #include "window.h"
-#include <sized_types.h>
+
+#define int8_t xcb_int8_t
+#define uint8_t xcb_uint8_t
 #include <xcb/xcb.h>
+#undef int8_t
+#undef uint8_t
+
+#include <sized_types.h>
 #include <xcb/shm.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
@@ -200,10 +206,8 @@ void window_update(struct window *w) {
     switch (event->response_type & ~0x80) {
       /* resize */
       case XCB_CONFIGURE_NOTIFY: {
-        struct xcb *xcb;
         xcb_configure_notify_event_t *e;
 
-        xcb = (struct xcb *) w->internal;
         e = (xcb_configure_notify_event_t *) event;
         if (e->width != w->width || e->height != w->height) {
           w->width = e->width;

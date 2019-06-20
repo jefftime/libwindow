@@ -19,9 +19,14 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
-#include <sized_types.h>
+#define int8_t xcb_int8_t
+#define uint8_t xcb_uint8_t
 #include <xcb/xcb.h>
 #include <xcb/shm.h>
+#undef int8_t
+#undef uint8_t
+
+#include <sized_types.h>
 
 struct window {
   void *internal;
