@@ -19,14 +19,14 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
+#include <sized_types.h>
 #include <xcb/xcb.h>
 #include <xcb/shm.h>
-#include <sized_types.h>
 
 struct window {
   void *internal;
-  uint16_t width;
-  uint16_t height;
+  uint16 width;
+  uint16 height;
   char *title;
 };
 
@@ -34,12 +34,12 @@ struct window {
 /* window_<platform>.c */
 int window_init(struct window *w,
                 char *title,
-                uint16_t width,
-                uint16_t height);
+                uint16 width,
+                uint16 height);
 void window_deinit(struct window *w);
 void window_show(struct window *w);
 void window_update(struct window *w);
-uint32_t *window_buffer(struct window *w);
+uint32 *window_buffer(struct window *w);
 int window_close(struct window *w);
 /* **************************************** */
 

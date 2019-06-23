@@ -17,11 +17,11 @@
  */
 
 #include "window.h"
-#include <xcb/xcb.h>
 #include <sized_types.h>
-#include <xcb/shm.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <xcb/xcb.h>
+#include <xcb/shm.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -32,15 +32,15 @@ struct xcb {
   xcb_window_t wn;
   xcb_gcontext_t gc;
   xcb_shm_seg_t shmseg;
-  uint32_t *shm_data;
+  uint32 *shm_data;
   xcb_atom_t win_delete;
   int should_close;
 };
 
 static int init_struct(struct window *w,
                        char *title,
-                       uint16_t width,
-                       uint16_t height) {
+                       uint16 width,
+                       uint16 height) {
   memset(w, 0, sizeof(struct window));
   w->internal = calloc(1, sizeof(struct xcb));
   if (!w->internal) return -1;
@@ -67,8 +67,8 @@ static int setup_xcb(struct xcb *xcb) {
 }
 
 static int setup_window(struct window *w) {
-  uint32_t mask = XCB_CW_EVENT_MASK;
-  uint32_t values[] = { XCB_EVENT_MASK_STRUCTURE_NOTIFY };
+  uint32 mask = XCB_CW_EVENT_MASK;
+  uint32 values[] = { XCB_EVENT_MASK_STRUCTURE_NOTIFY };
   struct xcb *xcb;
   xcb_intern_atom_cookie_t protocol_cookie, delete_cookie;
   xcb_intern_atom_reply_t *protocol_reply, *delete_reply;
@@ -92,7 +92,7 @@ static int setup_window(struct window *w) {
                       XCB_ATOM_WM_NAME,
                       XCB_ATOM_STRING,
                       8,
-                      (uint32_t) strlen(w->title),
+                      (uint32) strlen(w->title),
                       w->title);
   xcb_flush(xcb->cn);
   /* watch for delete event */
@@ -140,12 +140,12 @@ static int setup_shm(struct window *w) {
     shmdt((void *) xcb->shm_data);
   }
   shmid = shmget(IPC_PRIVATE,
-                 sizeof(uint32_t) * w->width * w->height,
+                 sizeof(uint32) * w->width * w->height,
                  IPC_CREAT | 0777);
   if (shmid < 0) return -1;
   xcb->shm_data = shmat(shmid, 0, 0);
   xcb->shmseg = xcb_generate_id(xcb->cn);
-  xcb_shm_attach(xcb->cn, xcb->shmseg, (uint32_t) shmid, 0);
+  xcb_shm_attach(xcb->cn, xcb->shmseg, (uint32) shmid, 0);
   xcb_flush(xcb->cn);
   shmctl(shmid, IPC_RMID, 0);
   return 0;
@@ -157,8 +157,8 @@ static int setup_shm(struct window *w) {
 
 int window_init(struct window *w,
                 char *title,
-                uint16_t width,
-                uint16_t height) {
+                uint16 width,
+                uint16 height) {
   struct xcb *xcb;
 
   if (!w) return -1;
@@ -211,6 +211,7 @@ void window_update(struct window *w) {
         }
         break;
       }
+      /* close window */
       case XCB_CLIENT_MESSAGE: {
         xcb_client_message_event_t *e;
 
@@ -235,7 +236,7 @@ void window_update(struct window *w) {
   xcb_flush(xcb->cn);
 }
 
-uint32_t *window_buffer(struct window *w) {
+uint32 *window_buffer(struct window *w) {
   return w ? ((struct xcb *) w->internal)->shm_data : NULL;
 }
 
