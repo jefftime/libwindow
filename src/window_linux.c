@@ -131,6 +131,11 @@ static void setup_graphics_context(struct xcb *xcb) {
 }
 
 static int setup_shm(struct window *w) {
+  enum {
+    MAX_WIDTH = 1920,
+    MAX_HEIGHT = 1080
+  };
+
   int shmid;
   struct xcb *xcb;
 
@@ -139,14 +144,14 @@ static int setup_shm(struct window *w) {
     xcb_shm_detach(xcb->cn, xcb->shmseg);
     shmdt((void *) xcb->shm_data);
   }
+  /* TODO: Programatically set max size. Right now we'll just do 1920x1080 */
   shmid = shmget(IPC_PRIVATE,
-                 sizeof(uint32) * w->width * w->height,
+                 sizeof(uint32) * MAX_WIDTH * MAX_HEIGHT,
                  IPC_CREAT | 0777);
   if (shmid < 0) return -1;
   xcb->shm_data = shmat(shmid, 0, 0);
   xcb->shmseg = xcb_generate_id(xcb->cn);
   xcb_shm_attach(xcb->cn, xcb->shmseg, (uint32) shmid, 0);
-  xcb_flush(xcb->cn);
   shmctl(shmid, IPC_RMID, 0);
   return 0;
 }
@@ -206,8 +211,7 @@ void window_update(struct window *w) {
         if (e->width != w->width || e->height != w->height) {
           w->width = e->width;
           w->height = e->height;
-          /* realloc shared memory lol */
-          setup_shm(w);
+          memset(xcb->shm_data, 0, sizeof(uint32) * w->width * w->height);
         }
         break;
       }
@@ -221,6 +225,12 @@ void window_update(struct window *w) {
       }
     }
   }
+}
+
+void window_draw(struct window *w) {
+  struct xcb *xcb;
+
+  xcb = (struct xcb *) w->internal;
   xcb_shm_put_image(xcb->cn,
                     xcb->wn,
                     xcb->gc,

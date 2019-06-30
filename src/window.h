@@ -39,6 +39,7 @@ int window_init(struct window *w,
 void window_deinit(struct window *w);
 void window_show(struct window *w);
 void window_update(struct window *w);
+void window_draw(struct window *w);
 uint32 *window_buffer(struct window *w);
 int window_close(struct window *w);
 /* **************************************** */
