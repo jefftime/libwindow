@@ -183,7 +183,10 @@ void window_deinit(struct window *w) {
   if (!w) return;
   xcb = (struct xcb *) w->internal;
   xcb_shm_detach(xcb->cn, xcb->shmseg);
+  xcb_destroy_window(xcb->cn, xcb->wn);
+  xcb_disconnect(xcb->cn);
   free(w->internal);
+  memset(w, 0, sizeof(struct window));
 }
 
 void window_show(struct window *w) {
@@ -252,4 +255,16 @@ uint32 *window_buffer(struct window *w) {
 
 int window_close(struct window *w) {
   return ((struct xcb *) w->internal)->should_close;
+}
+
+void window_swap(struct window *w) {
+  xcb_flush(((struct xcb *) w->internal)->cn);
+}
+
+xcb_connection_t *window_xcb_connection(struct window *w) {
+  return ((struct xcb *) w->internal)->cn;
+}
+
+xcb_window_t window_xcb_window(struct window *w) {
+  return ((struct xcb *) w->internal)->wn;
 }

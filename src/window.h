@@ -42,7 +42,9 @@ void window_update(struct window *w);
 void window_draw(struct window *w);
 uint32 *window_buffer(struct window *w);
 int window_close(struct window *w);
+void window_swap(struct window *w);
+xcb_connection_t *window_xcb_connection(struct window *w);
+xcb_window_t window_xcb_window(struct window *w);
 /* **************************************** */
-
 
 #endif
