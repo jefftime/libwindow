@@ -37,10 +37,12 @@ struct xcb {
   int should_close;
 };
 
-static int init_struct(struct window *w,
-                       char *title,
-                       uint16_t width,
-                       uint16_t height) {
+static int init_struct(
+  struct window *w,
+  char *title,
+  uint16_t width,
+  uint16_t height)
+{
   memset(w, 0, sizeof(struct window));
   w->internal = calloc(1, sizeof(struct xcb));
   if (!w->internal) return -1;
@@ -75,50 +77,55 @@ static int setup_window(struct window *w) {
 
   xcb = (struct xcb *) w->internal;
   xcb->wn = xcb_generate_id(xcb->cn);
-  xcb_create_window(xcb->cn,
-                    XCB_COPY_FROM_PARENT,
-                    xcb->wn,
-                    xcb->screen->root,
-                    0, 0,
-                    w->width, w->height,
-                    0,
-                    XCB_WINDOW_CLASS_INPUT_OUTPUT,
-                    xcb->screen->root_visual,
-                    mask,
-                    values);
-  xcb_change_property(xcb->cn,
-                      XCB_PROP_MODE_REPLACE,
-                      xcb->wn,
-                      XCB_ATOM_WM_NAME,
-                      XCB_ATOM_STRING,
-                      8,
-                      (uint32_t) strlen(w->title),
-                      w->title);
+  xcb_create_window(
+    xcb->cn,
+    XCB_COPY_FROM_PARENT,
+    xcb->wn,
+    xcb->screen->root,
+    0, 0,
+    w->width, w->height,
+    0,
+    XCB_WINDOW_CLASS_INPUT_OUTPUT,
+    xcb->screen->root_visual,
+    mask,
+    values);
+  xcb_change_property(
+    xcb->cn,
+    XCB_PROP_MODE_REPLACE,
+    xcb->wn,
+    XCB_ATOM_WM_NAME,
+    XCB_ATOM_STRING,
+    8,
+    (uint32_t) strlen(w->title),
+    w->title);
   xcb_flush(xcb->cn);
   /* watch for delete event */
-  protocol_cookie = xcb_intern_atom(xcb->cn,
-                                    0,
-                                    strlen("WM_PROTOCOLS"),
-                                    "WM_PROTOCOLS");
+  protocol_cookie = xcb_intern_atom(
+    xcb->cn,
+    0,
+    strlen("WM_PROTOCOLS"),
+    "WM_PROTOCOLS");
   protocol_reply = xcb_intern_atom_reply(xcb->cn, protocol_cookie, NULL);
   if (!protocol_reply) return -1;
-  delete_cookie = xcb_intern_atom(xcb->cn,
-                                  0,
-                                  strlen("WM_DELETE_WINDOW"),
-                                  "WM_DELETE_WINDOW");
+  delete_cookie = xcb_intern_atom(
+    xcb->cn,
+    0,
+    strlen("WM_DELETE_WINDOW"),
+    "WM_DELETE_WINDOW");
   delete_reply = xcb_intern_atom_reply(xcb->cn, delete_cookie, NULL);
   if (!delete_reply) {
     free(protocol_reply);
     return -1;
   }
-  xcb_change_property(xcb->cn,
-                      XCB_PROP_MODE_REPLACE,
-                      xcb->wn,
-                      (protocol_reply->atom),
-                      XCB_ATOM_ATOM,
-                      32,
-                      1,
-                      &delete_reply->atom);
+  xcb_change_property(
+    xcb->cn,
+    XCB_PROP_MODE_REPLACE,
+    xcb->wn,
+    (protocol_reply->atom),
+    XCB_ATOM_ATOM,
+    32,
+    1,
+    &delete_reply->atom);
   xcb->win_delete = delete_reply->atom;
   free(protocol_reply);
   free(delete_reply);
@@ -145,9 +152,10 @@ static int setup_shm(struct window *w) {
     shmdt((void *) xcb->shm_data);
   }
   /* TODO: Programatically set max size. Right now we'll just do 1920x1080 */
-  shmid = shmget(IPC_PRIVATE,
-                 sizeof(uint32_t) * MAX_WIDTH * MAX_HEIGHT,
-                 IPC_CREAT | 0777);
+  shmid = shmget(
+    IPC_PRIVATE,
+    sizeof(uint32_t) * MAX_WIDTH * MAX_HEIGHT,
+    IPC_CREAT | 0777);
   if (shmid < 0) return -1;
   xcb->shm_data = shmat(shmid, 0, 0);
   xcb->shmseg = xcb_generate_id(xcb->cn);
@@ -160,10 +168,12 @@ static int setup_shm(struct window *w) {
 /* Public */
 /* **************************************** */
 
-int window_init(struct window *w,
-                char *title,
-                uint16_t width,
-                uint16_t height) {
+int window_init(
+  struct window *w,
+  char *title,
+  uint16_t width,
+  uint16_t height)
+{
   struct xcb *xcb;
 
   if (!w) return -1;
@@ -211,7 +221,10 @@ void window_update(struct window *w) {
         xcb_configure_notify_event_t *e;
 
         e = (xcb_configure_notify_event_t *) event;
-        if (e->width != w->width || e->height != w->height) {
+        if (  (e->width != w->width)
+           || (e->height != w->height)
+           )
+        {
           w->width = e->width;
           w->height = e->height;
           memset(xcb->shm_data, 0, sizeof(uint32_t) * w->width * w->height);
@@ -234,18 +247,19 @@ void window_draw(struct window *w) {
   struct xcb *xcb;
 
   xcb = (struct xcb *) w->internal;
-  xcb_shm_put_image(xcb->cn,
-                    xcb->wn,
-                    xcb->gc,
-                    w->width, w->height,
-                    0, 0,
-                    w->width, w->height,
-                    0, 0,
-                    xcb->screen->root_depth,
-                    XCB_IMAGE_FORMAT_Z_PIXMAP,
-                    0,
-                    xcb->shmseg,
-                    0);
+  xcb_shm_put_image(
+    xcb->cn,
+    xcb->wn,
+    xcb->gc,
+    w->width, w->height,
+    0, 0,
+    w->width, w->height,
+    0, 0,
+    xcb->screen->root_depth,
+    XCB_IMAGE_FORMAT_Z_PIXMAP,
+    0,
+    xcb->shmseg,
+    0);
   xcb_flush(xcb->cn);
 }
 
