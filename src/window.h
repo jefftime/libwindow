@@ -1,6 +1,6 @@
 /* This file is a part of libwindow
  *
- * Copyright 2019, Jeffery Stager
+ * Copyright 2019-2020, Jeffery Stager
  *
  * libwindow is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,11 @@
 #define WINDOW_H
 
 #include <sized_types.h>
+
+#ifdef WINDOW_TARGET_OS_LINUX
 #include <xcb/xcb.h>
 #include <xcb/shm.h>
+#endif  /* WINDOW_TARGET_OS_LINUX */
 
 struct window {
   void *internal;
@@ -36,7 +39,8 @@ int window_init(
   struct window *w,
   char *title,
   uint16_t width,
-  uint16_t height);
+  uint16_t height
+);
 void window_deinit(struct window *w);
 void window_show(struct window *w);
 void window_update(struct window *w);
@@ -44,8 +48,11 @@ void window_draw(struct window *w);
 uint32_t *window_buffer(struct window *w);
 int window_close(struct window *w);
 void window_swap(struct window *w);
+
+#ifdef WINDOW_TARGET_OS_LINUX
 xcb_connection_t *window_xcb_connection(struct window *w);
 xcb_window_t window_xcb_window(struct window *w);
+#endif  /* WINDOW_TARGET_OS_LINUX */
 /* **************************************** */
 
 #endif

@@ -1,0 +1,10 @@
+option(
+  'target_os',
+  type: 'combo',
+  choices: [
+    'unknown',
+    'linux',
+    'wasm'
+  ],
+  description: 'Target operating system for executable'
+)
