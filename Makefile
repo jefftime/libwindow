@@ -15,15 +15,10 @@ srcdir = ./src
 libdir ?= ./libs
 bindir ?= ./bin
 
-green = '\033[1;32m'
-nocolor = '\033[0m'
-
 $(bindir)/libwindow.a: $(obj)
-# @echo -e $(green)Link $(notdir $@)$(nocolor)
 	$(AR) rcs $@ $(obj)
 
 $(bindir)/%.o: $(srcdir)/%.c
-# @echo $(notdir $@)...
 	$(CC) -c $(cflags) -o $@ $^
 
 .PHONY: clean

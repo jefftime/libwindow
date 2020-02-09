@@ -16,14 +16,16 @@
  * along with libwindow.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "window.h"
+#include <window.h>
 #include <sized_types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <xcb/xcb.h>
 #include <xcb/shm.h>
-#include <stdlib.h>
-#include <string.h>
+#include <xcb/glx.h>
+#include <GL/glx.h>
+#include <stdlib.h>             /* calloc, free */
+#include <string.h>             /* memset, strlen */
 
 struct xcb {
   xcb_connection_t *cn;
@@ -34,6 +36,8 @@ struct xcb {
   xcb_shm_seg_t shmseg;
   uint32_t *shm_data;
   xcb_atom_t win_delete;
+  xcb_glx_context_tag_t ctag;
+  xcb_glx_drawable_t drawable;
   int should_close;
 };
 
@@ -41,8 +45,8 @@ static int init_struct(
   struct window *w,
   char *title,
   uint16_t width,
-  uint16_t height)
-{
+  uint16_t height
+) {
   memset(w, 0, sizeof(struct window));
   w->internal = calloc(1, sizeof(struct xcb));
   if (!w->internal) return -1;
@@ -260,6 +264,7 @@ void window_draw(struct window *w) {
     0,
     xcb->shmseg,
     0);
+  /* xcb_glx_swap_buffers(xcb->cn, xcb->ctag, xcb->drawable); */
   xcb_flush(xcb->cn);
 }
 
