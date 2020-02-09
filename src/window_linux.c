@@ -172,8 +172,8 @@ int window_init(
   struct window *w,
   char *title,
   uint16_t width,
-  uint16_t height)
-{
+  uint16_t height
+) {
   struct xcb *xcb;
 
   if (!w) return -1;
