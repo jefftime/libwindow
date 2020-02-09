@@ -216,29 +216,29 @@ void window_update(struct window *w) {
   /* check if window has been closed */
   while ((event = xcb_poll_for_event(xcb->cn))) {
     switch (event->response_type & ~0x80) {
-      /* resize */
-      case XCB_CONFIGURE_NOTIFY: {
-        xcb_configure_notify_event_t *e;
+    /* resize */
+    case XCB_CONFIGURE_NOTIFY: {
+      xcb_configure_notify_event_t *e;
 
-        e = (xcb_configure_notify_event_t *) event;
-        if (  (e->width != w->width)
-           || (e->height != w->height)
-           )
+      e = (xcb_configure_notify_event_t *) event;
+      if (  (e->width != w->width)
+         || (e->height != w->height)
+         )
         {
           w->width = e->width;
           w->height = e->height;
           memset(xcb->shm_data, 0, sizeof(uint32_t) * w->width * w->height);
         }
-        break;
-      }
-      /* close window */
-      case XCB_CLIENT_MESSAGE: {
-        xcb_client_message_event_t *e;
+      break;
+    }
+    /* close window */
+    case XCB_CLIENT_MESSAGE: {
+      xcb_client_message_event_t *e;
 
-        e = (xcb_client_message_event_t *) event;
-        if (e->data.data32[0] == xcb->win_delete) xcb->should_close = 1;
-        break;
-      }
+      e = (xcb_client_message_event_t *) event;
+      if (e->data.data32[0] == xcb->win_delete) xcb->should_close = 1;
+      break;
+    }
     }
   }
 }
