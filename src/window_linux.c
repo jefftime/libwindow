@@ -187,6 +187,7 @@ int window_init(
   if (setup_window(w)) return -1;
   setup_graphics_context((struct xcb *) w->internal);
   if (setup_shm(w)) return -1;
+  xcb_map_window(xcb->cn, xcb->wn);
   xcb_flush(xcb->cn);
   return 0;
 }
@@ -201,15 +202,6 @@ void window_deinit(struct window *w) {
   xcb_disconnect(xcb->cn);
   free(w->internal);
   memset(w, 0, sizeof(struct window));
-}
-
-void window_show(struct window *w) {
-  struct xcb *xcb;
-
-  if (!w) return;
-  xcb = (struct xcb *) w->internal;
-  xcb_map_window(xcb->cn, xcb->wn);
-  xcb_flush(xcb->cn);
 }
 
 void window_update(struct window *w) {

@@ -42,7 +42,6 @@ int window_init(
   uint16_t height
 );
 void window_deinit(struct window *w);
-void window_show(struct window *w);
 void window_update(struct window *w);
 void window_draw(struct window *w);
 uint32_t *window_buffer(struct window *w);
