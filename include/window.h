@@ -23,7 +23,6 @@
 
 #ifdef WINDOW_TARGET_OS_LINUX
 #include <xcb/xcb.h>
-#include <xcb/shm.h>
 #endif  /* WINDOW_TARGET_OS_LINUX */
 
 struct window {

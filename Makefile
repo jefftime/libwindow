@@ -1,19 +1,14 @@
+srcdir = ./src
+libdir ?= ./libs
+bindir ?= ./bin
 inclibs = sized_types window
+defs ?=
 
 # Computed
 src = $(wildcard $(srcdir)/*.c)
 obj = $(addprefix $(bindir)/,$(notdir $(src:%.c=%.o)))
-cflags = -fPIC \
-	-std=c90 \
-	-pedantic-errors \
-	-Wall \
-	-Wconversion \
-	$(addprefix -I,$(incdirs)) \
-	--no-standard-libraries
+cflags += -fPIC $(addprefix -I,$(incdirs)) $(addprefix -D,$(defs))
 incdirs = $(addsuffix /include,$(addprefix $(libdir)/,$(inclibs)))
-srcdir = ./src
-libdir ?= ./libs
-bindir ?= ./bin
 
 $(bindir)/libwindow.a: $(obj)
 	$(AR) rcs $@ $(obj)

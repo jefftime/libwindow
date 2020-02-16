@@ -18,26 +18,16 @@
 
 #include <window.h>
 #include <sized_types.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <xcb/xcb.h>
-#include <xcb/shm.h>
-#include <xcb/glx.h>
-#include <GL/glx.h>
 #include <stdlib.h>             /* calloc, free */
 #include <string.h>             /* memset, strlen */
+#include <xcb/xcb.h>
 
 struct xcb {
   xcb_connection_t *cn;
   xcb_setup_t *setup;
   xcb_screen_t *screen;
   xcb_window_t wn;
-  xcb_gcontext_t gc;
-  xcb_shm_seg_t shmseg;
-  uint32_t *shm_data;
   xcb_atom_t win_delete;
-  xcb_glx_context_tag_t ctag;
-  xcb_glx_drawable_t drawable;
   int should_close;
 };
 
@@ -136,38 +126,6 @@ static int setup_window(struct window *w) {
   return 0;
 }
 
-static void setup_graphics_context(struct xcb *xcb) {
-  xcb->gc = xcb_generate_id(xcb->cn);
-  xcb_create_gc(xcb->cn, xcb->gc, xcb->wn, 0, NULL);
-}
-
-static int setup_shm(struct window *w) {
-  enum {
-    MAX_WIDTH = 1920,
-    MAX_HEIGHT = 1080
-  };
-
-  int shmid;
-  struct xcb *xcb;
-
-  xcb = (struct xcb *) w->internal;
-  if (xcb->shm_data) {
-    xcb_shm_detach(xcb->cn, xcb->shmseg);
-    shmdt((void *) xcb->shm_data);
-  }
-  /* TODO: Programatically set max size. Right now we'll just do 1920x1080 */
-  shmid = shmget(
-    IPC_PRIVATE,
-    sizeof(uint32_t) * MAX_WIDTH * MAX_HEIGHT,
-    IPC_CREAT | 0777);
-  if (shmid < 0) return -1;
-  xcb->shm_data = shmat(shmid, 0, 0);
-  xcb->shmseg = xcb_generate_id(xcb->cn);
-  xcb_shm_attach(xcb->cn, xcb->shmseg, (uint32_t) shmid, 0);
-  shmctl(shmid, IPC_RMID, 0);
-  return 0;
-}
-
 /* **************************************** */
 /* Public */
 /* **************************************** */
@@ -185,8 +143,6 @@ int window_init(
   xcb = (struct xcb *) w->internal;
   if (setup_xcb((struct xcb *) w->internal)) return -1;
   if (setup_window(w)) return -1;
-  setup_graphics_context((struct xcb *) w->internal);
-  if (setup_shm(w)) return -1;
   xcb_map_window(xcb->cn, xcb->wn);
   xcb_flush(xcb->cn);
   return 0;
@@ -197,7 +153,6 @@ void window_deinit(struct window *w) {
 
   if (!w) return;
   xcb = (struct xcb *) w->internal;
-  xcb_shm_detach(xcb->cn, xcb->shmseg);
   xcb_destroy_window(xcb->cn, xcb->wn);
   xcb_disconnect(xcb->cn);
   free(w->internal);
@@ -223,7 +178,6 @@ void window_update(struct window *w) {
         {
           w->width = e->width;
           w->height = e->height;
-          memset(xcb->shm_data, 0, sizeof(uint32_t) * w->width * w->height);
         }
       break;
     }
@@ -237,31 +191,6 @@ void window_update(struct window *w) {
     }
     }
   }
-}
-
-void window_draw(struct window *w) {
-  struct xcb *xcb;
-
-  xcb = (struct xcb *) w->internal;
-  xcb_shm_put_image(
-    xcb->cn,
-    xcb->wn,
-    xcb->gc,
-    w->width, w->height,
-    0, 0,
-    w->width, w->height,
-    0, 0,
-    xcb->screen->root_depth,
-    XCB_IMAGE_FORMAT_Z_PIXMAP,
-    0,
-    xcb->shmseg,
-    0);
-  /* xcb_glx_swap_buffers(xcb->cn, xcb->ctag, xcb->drawable); */
-  xcb_flush(xcb->cn);
-}
-
-uint32_t *window_buffer(struct window *w) {
-  return w ? ((struct xcb *) w->internal)->shm_data : NULL;
 }
 
 int window_close(struct window *w) {
